@@ -19,7 +19,10 @@
 package org.apache.pulsar.ecosystem.io.sqs;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.amazonaws.handlers.AsyncHandler;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.amazonaws.services.sqs.model.SendMessageResult;
+
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -46,25 +49,28 @@ public class SQSSink extends SQSAbstractConnector implements Sink<byte[]> {
 
     @Override
     public void write(Record<byte[]> record) {
-        try {
-            send(new String(record.getValue(), UTF_8));
-            record.ack();
-            if (sinkContext != null) {
-                sinkContext.recordMetric(METRICS_TOTAL_SUCCESS, 1);
-            }
-        } catch (Exception e) {
-            log.error("failed send message to AWS SQS.", e);
-            record.fail();
-            if (sinkContext != null) {
-                sinkContext.recordMetric(METRICS_TOTAL_FAILURE, 1);
-            }
-        }
-    }
-
-    public void send(String msgBody) {
-        final SendMessageRequest request = new SendMessageRequest();
+        String msgBody = new String(record.getValue(), UTF_8);
+        SendMessageRequest request = new SendMessageRequest();
         request.withMessageBody(msgBody).withQueueUrl(getQueueUrl());
-        getClient().sendMessageAsync(request);
+
+        getClient().sendMessageAsync(request, new AsyncHandler<SendMessageRequest, SendMessageResult>() {
+            @Override
+            public void onError(Exception e) {
+                log.error("failed sending message to AWS SQS.", e);
+                record.fail();
+                if (sinkContext != null) {
+                    sinkContext.recordMetric(METRICS_TOTAL_FAILURE, 1);
+                }
+            }
+
+            @Override
+            public void onSuccess(SendMessageRequest request, SendMessageResult sendMessageResult) {
+                record.ack();
+                if (sinkContext != null) {
+                    sinkContext.recordMetric(METRICS_TOTAL_SUCCESS, 1);
+                }
+            }
+        });
     }
 
     @Override
