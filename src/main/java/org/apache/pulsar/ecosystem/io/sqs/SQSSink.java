@@ -26,6 +26,7 @@ import com.amazonaws.services.sqs.model.SendMessageResult;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pulsar.client.api.schema.GenericRecord;
 import org.apache.pulsar.functions.api.Record;
 import org.apache.pulsar.io.core.Sink;
 import org.apache.pulsar.io.core.SinkContext;
@@ -34,7 +35,7 @@ import org.apache.pulsar.io.core.SinkContext;
  * A source connector for AWS SQS.
  */
 @Slf4j
-public class SQSSink extends SQSAbstractConnector implements Sink<byte[]> {
+public class SQSSink extends SQSAbstractConnector implements Sink<GenericRecord> {
     private SinkContext sinkContext;
 
     private static final String METRICS_TOTAL_SUCCESS = "_sqs_sink_total_success_";
@@ -48,8 +49,12 @@ public class SQSSink extends SQSAbstractConnector implements Sink<byte[]> {
     }
 
     @Override
-    public void write(Record<byte[]> record) {
-        String msgBody = new String(record.getValue(), UTF_8);
+    public void write(Record<GenericRecord> record) {
+        String msgBody = generateMessageBody(record);
+        if (null == msgBody) {
+            record.ack();
+            return;
+        }
         SendMessageRequest request = new SendMessageRequest();
         request.withMessageBody(msgBody).withQueueUrl(getQueueUrl());
 
@@ -71,6 +76,19 @@ public class SQSSink extends SQSAbstractConnector implements Sink<byte[]> {
                 }
             }
         });
+    }
+
+    private String generateMessageBody(Record<GenericRecord> record) {
+        if (record.getSchema() == null) {
+            return new String(record.getMessage().get().getData(), UTF_8);
+        } else {
+            Object nativeObject = record.getValue().getNativeObject();
+            if (null == nativeObject) {
+                return null;
+            } else {
+                return nativeObject.toString();
+            }
+        }
     }
 
     @Override
