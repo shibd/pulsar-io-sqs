@@ -20,9 +20,11 @@ package org.apache.pulsar.ecosystem.io.sqs;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.amazonaws.handlers.AsyncHandler;
+import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +42,7 @@ public class SQSSink extends SQSAbstractConnector implements Sink<GenericRecord>
 
     private static final String METRICS_TOTAL_SUCCESS = "_sqs_sink_total_success_";
     private static final String METRICS_TOTAL_FAILURE = "_sqs_sink_total_failure_";
+    private static final String PULSAR_MESSAGE_KEY = "pulsar.key";
 
     @Override
     public void open(Map<String, Object> map, SinkContext sinkContext) throws Exception {
@@ -50,13 +53,11 @@ public class SQSSink extends SQSAbstractConnector implements Sink<GenericRecord>
 
     @Override
     public void write(Record<GenericRecord> record) {
-        String msgBody = generateMessageBody(record);
-        if (null == msgBody) {
+        SendMessageRequest request = generateSendMessageRequest(record);
+        if (request == null) {
             record.ack();
             return;
         }
-        SendMessageRequest request = new SendMessageRequest();
-        request.withMessageBody(msgBody).withQueueUrl(getQueueUrl());
 
         getClient().sendMessageAsync(request, new AsyncHandler<SendMessageRequest, SendMessageResult>() {
             @Override
@@ -78,6 +79,24 @@ public class SQSSink extends SQSAbstractConnector implements Sink<GenericRecord>
         });
     }
 
+    private SendMessageRequest generateSendMessageRequest(Record<GenericRecord> record) {
+        String msgBody = generateMessageBody(record);
+        if (null == msgBody) {
+            return null;
+        }
+
+        SendMessageRequest request = new SendMessageRequest()
+                .withQueueUrl(getQueueUrl())
+                .withMessageBody(msgBody);
+
+        Map<String, MessageAttributeValue> attributes = generateMessageAttributes(record);
+        if (!attributes.isEmpty()) {
+            request.withMessageAttributes(attributes);
+        }
+
+        return request;
+    }
+
     private String generateMessageBody(Record<GenericRecord> record) {
         if (record.getSchema() == null) {
             return new String(record.getMessage().get().getData(), UTF_8);
@@ -89,6 +108,29 @@ public class SQSSink extends SQSAbstractConnector implements Sink<GenericRecord>
                 return nativeObject.toString();
             }
         }
+    }
+
+    private Map<String, MessageAttributeValue> generateMessageAttributes(Record<GenericRecord> record) {
+        Map<String, MessageAttributeValue> attributeMap = new HashMap<>();
+
+        if (record.getKey().isPresent()) {
+            attributeMap.put(PULSAR_MESSAGE_KEY, new MessageAttributeValue()
+                    .withDataType("String")
+                    .withStringValue(record.getKey().get()));
+        }
+
+        for (Map.Entry<String, String> propertyEntry: record.getProperties().entrySet()) {
+            if (propertyEntry.getKey() == PULSAR_MESSAGE_KEY) {
+                log.error("attribute name " + PULSAR_MESSAGE_KEY + "is reserved.");
+                throw new IllegalArgumentException(PULSAR_MESSAGE_KEY + " is a reserved attributed key.");
+            }
+
+           attributeMap.put(propertyEntry.getKey(), new MessageAttributeValue()
+                   .withDataType("String")
+                   .withStringValue(propertyEntry.getValue()));
+        }
+
+        return attributeMap;
     }
 
     @Override
