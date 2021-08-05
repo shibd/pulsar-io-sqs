@@ -21,9 +21,13 @@
  */
 package org.apache.pulsar.ecosystem.io.sqs;
 
+import com.amazonaws.handlers.AsyncHandler;
 import com.amazonaws.services.sqs.model.ChangeMessageVisibilityRequest;
+import com.amazonaws.services.sqs.model.ChangeMessageVisibilityResult;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
+import com.amazonaws.services.sqs.model.DeleteMessageResult;
 import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.services.sqs.model.MessageSystemAttributeName;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 
 import java.util.Map;
@@ -42,15 +46,16 @@ import org.apache.pulsar.io.core.SourceContext;
  * A source connector for AWS SQS.
  */
 @Slf4j
-public class SQSSource extends SQSAbstractConnector implements Source<byte[]> {
+public class SQSSource extends SQSAbstractConnector implements Source<String> {
 
     private static final int DEFAULT_QUEUE_LENGTH = 1000;
     private static final Integer MAX_WAIT_TIME = 20;
     private static final String METRICS_TOTAL_SUCCESS = "_sqs_source_total_success_";
     private static final String METRICS_TOTAL_FAILURE = "_sqs_source_total_failure_";
+    private String destinationTopic;
     private SourceContext sourceContext;
     private ExecutorService executor;
-    private LinkedBlockingQueue<Record<byte[]>> queue;
+    private LinkedBlockingQueue<Record<String>> queue;
 
     @Override
     public void open(Map<String, Object> map, SourceContext sourceContext) throws Exception {
@@ -58,6 +63,7 @@ public class SQSSource extends SQSAbstractConnector implements Source<byte[]> {
         setConfig(SQSConnectorConfig.load(map));
         prepareSqsClient();
 
+        destinationTopic = sourceContext.getOutputTopic();
         queue = new LinkedBlockingQueue<>(this.getQueueLength());
 
         executor = Executors.newFixedThreadPool(1);
@@ -66,40 +72,69 @@ public class SQSSource extends SQSAbstractConnector implements Source<byte[]> {
 
     public Stream<Message> receive() {
         final ReceiveMessageRequest request = new ReceiveMessageRequest(getQueueUrl())
-                .withWaitTimeSeconds(MAX_WAIT_TIME);
+                .withWaitTimeSeconds(MAX_WAIT_TIME)
+                .withMessageAttributeNames("All")
+                .withAttributeNames(MessageSystemAttributeName.SentTimestamp.toString());
         return getClient().receiveMessage(request).getMessages().stream();
     }
 
-    public void fail(Message message) {
+    public void fail(String messageHandle) {
         final ChangeMessageVisibilityRequest request = new ChangeMessageVisibilityRequest()
                 .withQueueUrl(getQueueUrl())
-                .withReceiptHandle(message.getReceiptHandle())
+                .withReceiptHandle(messageHandle)
                 .withVisibilityTimeout(MAX_WAIT_TIME);
 
-        getClient().changeMessageVisibilityAsync(request);
-        if (sourceContext != null) {
-            sourceContext.recordMetric(METRICS_TOTAL_FAILURE, 1);
-        }
+        getClient().changeMessageVisibilityAsync(request,
+                new AsyncHandler<ChangeMessageVisibilityRequest, ChangeMessageVisibilityResult>() {
+                    @Override
+                    public void onError(Exception e) {
+                        fail(messageHandle); // retry
+                    }
+
+                    @Override
+                    public void onSuccess(ChangeMessageVisibilityRequest request,
+                                          ChangeMessageVisibilityResult changeMessageVisibilityResult) {
+                        if (sourceContext != null) {
+                            sourceContext.recordMetric(METRICS_TOTAL_FAILURE, 1);
+                        }
+                    }
+                }
+        );
     }
 
-    public void ack(Message message) {
+    public void ack(String messageHandle) {
         final DeleteMessageRequest request = new DeleteMessageRequest()
                 .withQueueUrl(getQueueUrl())
-                .withReceiptHandle(message.getReceiptHandle());
+                .withReceiptHandle(messageHandle);
 
-        getClient().deleteMessageAsync(request);
-        if (sourceContext != null) {
-            sourceContext.recordMetric(METRICS_TOTAL_SUCCESS, 1);
-        }
+        getClient().deleteMessageAsync(request, new AsyncHandler<DeleteMessageRequest, DeleteMessageResult>() {
+            @Override
+            public void onError(Exception e) {
+                ack(messageHandle); // retry
+            }
+
+            @Override
+            public void onSuccess(DeleteMessageRequest request, DeleteMessageResult deleteMessageResult) {
+                // do nothing
+                if (sourceContext != null) {
+                    sourceContext.recordMetric(METRICS_TOTAL_SUCCESS, 1);
+                }
+            }
+        });
     }
 
     @Override
-    public Record<byte[]> read() throws Exception {
+    public Record<String> read() throws Exception {
         return this.queue.take();
     }
 
-    public void consume(Record<byte[]> record) throws InterruptedException {
-        this.queue.put(record);
+    public void enqueue(Message msg) {
+        try {
+            this.queue.put(new SQSRecord(destinationTopic, msg, this));
+        } catch (InterruptedException ex) {
+            log.error("sqs message processing interrupted", ex);
+            fail(msg.getReceiptHandle());
+        }
     }
 
     @Override
@@ -112,6 +147,7 @@ public class SQSSource extends SQSAbstractConnector implements Source<byte[]> {
         } catch (InterruptedException e) {
             executor.shutdownNow();
         }
+
         if (getClient() != null) {
             getClient().shutdown();
         }

@@ -34,7 +34,7 @@ import org.apache.pulsar.io.core.Sink;
 import org.apache.pulsar.io.core.SinkContext;
 
 /**
- * A source connector for AWS SQS.
+ * A sink connector for AWS SQS.
  */
 @Slf4j
 public class SQSSink extends SQSAbstractConnector implements Sink<GenericRecord> {
@@ -42,7 +42,6 @@ public class SQSSink extends SQSAbstractConnector implements Sink<GenericRecord>
 
     private static final String METRICS_TOTAL_SUCCESS = "_sqs_sink_total_success_";
     private static final String METRICS_TOTAL_FAILURE = "_sqs_sink_total_failure_";
-    private static final String PULSAR_MESSAGE_KEY = "pulsar.key";
 
     @Override
     public void open(Map<String, Object> map, SinkContext sinkContext) throws Exception {
@@ -114,15 +113,15 @@ public class SQSSink extends SQSAbstractConnector implements Sink<GenericRecord>
         Map<String, MessageAttributeValue> attributeMap = new HashMap<>();
 
         if (record.getKey().isPresent()) {
-            attributeMap.put(PULSAR_MESSAGE_KEY, new MessageAttributeValue()
+            attributeMap.put(SQSUtils.PULSAR_MESSAGE_KEY, new MessageAttributeValue()
                     .withDataType("String")
                     .withStringValue(record.getKey().get()));
         }
 
         for (Map.Entry<String, String> propertyEntry: record.getProperties().entrySet()) {
-            if (propertyEntry.getKey() == PULSAR_MESSAGE_KEY) {
-                log.error("attribute name " + PULSAR_MESSAGE_KEY + "is reserved.");
-                throw new IllegalArgumentException(PULSAR_MESSAGE_KEY + " is a reserved attributed key.");
+            if (propertyEntry.getKey().equals(SQSUtils.PULSAR_MESSAGE_KEY)) {
+                log.error("attribute name " + SQSUtils.PULSAR_MESSAGE_KEY + "is reserved.");
+                throw new IllegalArgumentException(SQSUtils.PULSAR_MESSAGE_KEY + " is a reserved attributed key.");
             }
 
            attributeMap.put(propertyEntry.getKey(), new MessageAttributeValue()

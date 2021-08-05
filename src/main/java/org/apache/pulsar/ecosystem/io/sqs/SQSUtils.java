@@ -26,7 +26,9 @@ import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
 /**
  * SQSUtils defines utils for AWS SQS connector.
 */
-public class SQSUtils {
+public final class SQSUtils {
+    public static final String PULSAR_MESSAGE_KEY = "pulsar.key";
+
     public static String ensureQueueExists(AmazonSQS client, String queueName) throws AmazonClientException {
         String queueUrl = queueExists(client, queueName);
         if (queueUrl == null) {

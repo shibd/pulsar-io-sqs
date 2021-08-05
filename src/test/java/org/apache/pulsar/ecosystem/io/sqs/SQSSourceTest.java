@@ -20,10 +20,13 @@ package org.apache.pulsar.ecosystem.io.sqs;
 
 import static org.apache.pulsar.ecosystem.io.sqs.SQSTestUtils.getTestConfigHashMap;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pulsar.io.core.SourceContext;
 import org.junit.Test;
 
 /**
@@ -39,10 +42,12 @@ public class SQSSourceTest {
     @Test
     public void testSQSSourceConnectToAWSSQS() {
         Map<String, Object> properties = getTestConfigHashMap();
+        SourceContext context = mock(SourceContext.class);
+        when(context.getOutputTopic()).thenReturn("mock-topic");
 
         SQSSource source = new SQSSource();
         try {
-            source.open(properties, null);
+            source.open(properties, context);
         } catch (Exception e) {
             assertNull("Connect to AWS SQS should not get exception", e);
         }
