@@ -27,15 +27,12 @@ import com.amazonaws.services.sqs.model.ChangeMessageVisibilityResult;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageResult;
 import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.MessageSystemAttributeName;
-import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.functions.api.Record;
@@ -49,7 +46,7 @@ import org.apache.pulsar.io.core.SourceContext;
 public class SQSSource extends SQSAbstractConnector implements Source<String> {
 
     private static final int DEFAULT_QUEUE_LENGTH = 1000;
-    private static final Integer MAX_WAIT_TIME = 20;
+
     private static final String METRICS_TOTAL_SUCCESS = "_sqs_source_total_success_";
     private static final String METRICS_TOTAL_FAILURE = "_sqs_source_total_failure_";
     private String destinationTopic;
@@ -70,19 +67,11 @@ public class SQSSource extends SQSAbstractConnector implements Source<String> {
         executor.execute(new SQSConsumerThread(this));
     }
 
-    public Stream<Message> receive() {
-        final ReceiveMessageRequest request = new ReceiveMessageRequest(getQueueUrl())
-                .withWaitTimeSeconds(MAX_WAIT_TIME)
-                .withMessageAttributeNames("All")
-                .withAttributeNames(MessageSystemAttributeName.SentTimestamp.toString());
-        return getClient().receiveMessage(request).getMessages().stream();
-    }
-
     public void fail(String messageHandle) {
         final ChangeMessageVisibilityRequest request = new ChangeMessageVisibilityRequest()
                 .withQueueUrl(getQueueUrl())
                 .withReceiptHandle(messageHandle)
-                .withVisibilityTimeout(MAX_WAIT_TIME);
+                .withVisibilityTimeout(SQSUtils.MAX_WAIT_TIME);
 
         getClient().changeMessageVisibilityAsync(request,
                 new AsyncHandler<ChangeMessageVisibilityRequest, ChangeMessageVisibilityResult>() {
@@ -124,8 +113,8 @@ public class SQSSource extends SQSAbstractConnector implements Source<String> {
     }
 
     @Override
-    public Record<String> read() throws Exception {
-        return this.queue.take();
+    public Record<String> read() throws InterruptedException {
+            return this.queue.take();
     }
 
     public void enqueue(Message msg) {
@@ -141,16 +130,21 @@ public class SQSSource extends SQSAbstractConnector implements Source<String> {
     public void close() {
         executor.shutdown();
         try {
-            if (!executor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+            if (!executor.awaitTermination(3000, TimeUnit.MILLISECONDS)) {
                 executor.shutdownNow();
+                // wait a while for tasks to respond to being cancelled
+                executor.awaitTermination(3000, TimeUnit.MILLISECONDS);
             }
         } catch (InterruptedException e) {
             executor.shutdownNow();
+            Thread.currentThread().interrupt();
         }
 
         if (getClient() != null) {
             getClient().shutdown();
         }
+
+        log.info("SQSSource closed.");
     }
 
     public int getQueueLength() {

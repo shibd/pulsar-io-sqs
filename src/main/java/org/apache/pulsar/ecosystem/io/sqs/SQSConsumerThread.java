@@ -18,6 +18,9 @@
  */
 package org.apache.pulsar.ecosystem.io.sqs;
 
+import com.amazonaws.services.sqs.model.MessageSystemAttributeName;
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -27,18 +30,33 @@ import lombok.extern.slf4j.Slf4j;
 public class SQSConsumerThread extends Thread {
 
     private final SQSSource source;
+    private boolean stopped;
+    private final ReceiveMessageRequest request;
 
     public SQSConsumerThread(SQSSource source) {
+        this.stopped = false;
         this.source = source;
+        this.request = new ReceiveMessageRequest(source.getQueueUrl())
+                .withWaitTimeSeconds(SQSUtils.MAX_WAIT_TIME)
+                .withMessageAttributeNames("All")
+                .withAttributeNames(MessageSystemAttributeName.SentTimestamp.toString());
     }
 
     public void run() {
-        while (true) {
+        while (!stopped) {
             try {
-                source.receive().forEachOrdered(source::enqueue);
+                source.getClient()
+                        .receiveMessage(request)
+                        .getMessages()
+                        .forEach(source::enqueue);
             } catch (Exception ex) {
-                log.error("receive message from sqs error", ex);
+                log.error("receive message from sqs error.", ex);
+                close();
             }
         }
+    }
+
+    public void close() {
+        stopped = true;
     }
 }
