@@ -20,7 +20,7 @@ You can get the SQS sink connector using one of the following methods.
   1. Clone the source code to your machine.
 
      ```bash
-     git clone https://github.com/streamnative/pulsar-io-sqs
+     git clone https://github.com/streamnative/pulsar-io-sqs.git
      ```
 
   2. Assume that `PULSAR_IO_SQS_HOME` is the home directory for the `pulsar-io-sqs` repo. Build the connector in the `${PULSAR_IO_SQS_HOME}` directory.
@@ -53,6 +53,15 @@ You can create a configuration file (JSON or YAML) to set the following properti
 | `awsCredentialPluginName` | String|false | " " (empty string) | Fully-qualified class name of implementation of `AwsCredentialProviderPlugin`. |
 | `awsCredentialPluginParam` | String|true | " " (empty string) | JSON parameter to initialize `AwsCredentialsProviderPlugin`. |
 | `queueName` | String|true | " " (empty string) | Name of the SQS queue that messages should be read from or written to. |
+
+The provided AWS credentials must have permissions to access AWS resources. To
+use the SQS sink connector, make sure the AWS credentials have the
+following permissions to Amazon SQS API:
+
+- sqs:CreateQueue
+- sqs:SendMessage
+
+For more information about Amazon SQS API permissions, see [Amazon SQS API permissions: Actions and resource reference](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-api-permissions-reference.html).
 
 ## Configure it with Function Worker
 
