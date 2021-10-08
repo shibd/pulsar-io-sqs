@@ -20,7 +20,7 @@ jobs:
       
       - name: build connector
         run: |
-          version=`./scripts/get-project-version/get-project-version.py`
+          version=`./scripts/dev/get-project-version.py`
           mvn clean install -DskipTests
           echo "::set-output name=nar-file::pulsar-io-sqs-${version}.nar"
           echo "::set-output name=readme-file::pulsar-io-sqs-readme.md"
@@ -32,7 +32,7 @@ jobs:
           retry_wait_seconds: 60
           timeout_minutes: 5
           command: |
-            CONNECTOR_VERSION=`./scripts/get-project-version/get-project-version.py`
+            CONNECTOR_VERSION=`./scripts/dev/get-project-version.py`
             PULSAR_VERSION=`mvn -q -Dexec.executable=echo -Dexec.args='${pulsar.version}' --non-recursive exec:exec 2>/dev/null`
             REPO=`mvn -q -Dexec.executable=echo -Dexec.args='${project.artifactId}' --non-recursive exec:exec 2>/dev/null`
             IMAGE_REPO=streamnative/${REPO}
