@@ -17,7 +17,7 @@
 # under the License.
 #
 
-FROM apachepulsar/pulsar-standalone:latest
+FROM apachepulsar/pulsar:latest
 
 ### Add test scripts
 COPY ./ /pulsar-io-sqs

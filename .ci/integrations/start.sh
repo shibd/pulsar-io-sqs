@@ -36,7 +36,9 @@ docker run  --network sqs-test -d --rm --name pulsar-io-sqs-test \
             -p 6650:6650 \
             -p 8443:8843 \
             -p 6651:6651 \
-            ${IMAGE_NAME}
+            ${IMAGE_NAME} \
+            /pulsar/bin/pulsar standalone \
+            --no-stream-storage
 
 PULSAR_ADMIN="docker exec -d pulsar-io-sqs-test /pulsar/bin/pulsar-admin"
 
