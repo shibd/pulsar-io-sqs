@@ -53,7 +53,7 @@ docker run  --network sqs-test -d --rm --name localstack \
             -e SERVICES=sqs \
             -e DEFAULT_REGION=us-east-1 \
             -e HOSTNAME_EXTERNAL=localstack \
-            localstack/localstack:latest
+            localstack/localstack:0.12.17
 
 sudo echo "127.0.0.1 localstack" | sudo tee -a /etc/hosts
 echo "-- Wait for localstack service to be ready"
