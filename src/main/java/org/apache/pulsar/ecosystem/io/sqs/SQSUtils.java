@@ -28,6 +28,7 @@ import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
 */
 public final class SQSUtils {
     public static final String PULSAR_MESSAGE_KEY = "pulsar.key";
+    public static final String PULSAR_TOPIC_ATTRIBUTE = "pulsar.destination_topic";
     public static final Integer MAX_WAIT_TIME = 20;
 
     public static String ensureQueueExists(AmazonSQS client, String queueName) throws AmazonClientException {

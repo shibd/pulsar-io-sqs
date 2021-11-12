@@ -18,7 +18,6 @@
  */
 package org.apache.pulsar.ecosystem.io.sqs;
 
-
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.MessageSystemAttributeName;
 
@@ -28,7 +27,7 @@ import java.util.Optional;
 
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.functions.api.Record;
-
+import software.amazon.awssdk.utils.StringUtils;
 
 
 /**
@@ -97,6 +96,14 @@ public class SQSRecord implements Record<String> {
 
     @Override
     public Optional<String> getDestinationTopic() {
-        return Optional.of(destination);
+        if (msg.getMessageAttributes().containsKey(SQSUtils.PULSAR_TOPIC_ATTRIBUTE)) {
+            String topicName = msg.getMessageAttributes().get(SQSUtils.PULSAR_TOPIC_ATTRIBUTE).getStringValue();
+            if (StringUtils.isNotBlank(topicName)) {
+                throw new IllegalArgumentException("topicName cannot be blank");
+            }
+            return Optional.of(StringUtils.trim(topicName));
+        } else {
+            return Optional.of(destination);
+        }
     }
 }
