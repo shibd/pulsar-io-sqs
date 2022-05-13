@@ -98,7 +98,7 @@ public class SQSRecord implements Record<String> {
     public Optional<String> getDestinationTopic() {
         if (msg.getMessageAttributes().containsKey(SQSUtils.PULSAR_TOPIC_ATTRIBUTE)) {
             String topicName = msg.getMessageAttributes().get(SQSUtils.PULSAR_TOPIC_ATTRIBUTE).getStringValue();
-            if (StringUtils.isNotBlank(topicName)) {
+            if (StringUtils.isBlank(topicName)) {
                 throw new IllegalArgumentException("topicName cannot be blank");
             }
             return Optional.of(StringUtils.trim(topicName));
