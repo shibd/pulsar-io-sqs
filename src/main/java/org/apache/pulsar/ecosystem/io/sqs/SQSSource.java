@@ -43,7 +43,7 @@ import org.apache.pulsar.io.core.SourceContext;
  * A source connector for AWS SQS.
  */
 @Slf4j
-public class SQSSource extends SQSAbstractConnector implements Source<String> {
+public class SQSSource extends SQSAbstractConnector implements Source<byte[]> {
 
     private static final int DEFAULT_QUEUE_LENGTH = 1000;
 
@@ -52,7 +52,7 @@ public class SQSSource extends SQSAbstractConnector implements Source<String> {
     private String destinationTopic;
     private SourceContext sourceContext;
     private ExecutorService executor;
-    private LinkedBlockingQueue<Record<String>> queue;
+    private LinkedBlockingQueue<Record<byte[]>> queue;
 
     @Override
     public void open(Map<String, Object> map, SourceContext sourceContext) throws Exception {
@@ -113,7 +113,7 @@ public class SQSSource extends SQSAbstractConnector implements Source<String> {
     }
 
     @Override
-    public Record<String> read() throws InterruptedException {
+    public Record<byte[]> read() throws InterruptedException {
             return this.queue.take();
     }
 

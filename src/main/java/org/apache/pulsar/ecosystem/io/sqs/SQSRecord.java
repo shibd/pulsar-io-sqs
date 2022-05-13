@@ -21,6 +21,7 @@ package org.apache.pulsar.ecosystem.io.sqs;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.MessageSystemAttributeName;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +34,7 @@ import software.amazon.awssdk.utils.StringUtils;
 /**
  * A record wrapping an sqs message.
  */
-public class SQSRecord implements Record<String> {
+public class SQSRecord implements Record<byte[]> {
     private final String destination;
     private final com.amazonaws.services.sqs.model.Message msg;
     private final SQSSource source;
@@ -54,13 +55,13 @@ public class SQSRecord implements Record<String> {
     }
 
     @Override
-    public Schema<String> getSchema() {
-        return Schema.STRING;
+    public Schema<byte[]> getSchema() {
+        return Schema.BYTES;
     }
 
     @Override
-    public String getValue() {
-        return msg.getBody();
+    public byte[] getValue() {
+        return msg.getBody().getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
