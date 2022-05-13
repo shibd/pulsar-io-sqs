@@ -26,7 +26,7 @@ cd $SRC_DIR
 IMAGE_NAME=pulsar-io-sqs-test:latest
 MVN_VERSION=`${SRC_DIR}/.ci/versions/get-project-version.py`
 
-docker build -t ${IMAGE_NAME} .
+docker build -t ${IMAGE_NAME} . --build-arg PULSAR_IMAGE_TAG="$MVN_VERSION"
 
 docker network create sqs-test
 

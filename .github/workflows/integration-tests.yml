@@ -29,7 +29,4 @@ jobs:
           max_attempts: 3
           retry_on: error
           command: |
-            ./.ci/integrations/start.sh
-            mvn clean package -DskipTests
-            mvn -Dtest=*IntegrationTest test -DfailIfNoTests=false
-            ./.ci/integrations/stop.sh
+            ./.ci/integrations/test.sh

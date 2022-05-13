@@ -9,9 +9,11 @@ services:
     ports:
       - 4566:4566
   pulsar:
-    image: apachepulsar/pulsar-standalone:latest
+    image: streamnative/pulsar:2.9.0-rc-202110221101
     ports:
       - 8080:8080
       - 6650:6650
     volumes:
       - ../../:/pulsar-io-sqs
+    command:
+      - /pulsar/bin/pulsar standalone --no-stream-storage

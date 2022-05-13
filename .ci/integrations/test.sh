@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -17,8 +18,12 @@
 # under the License.
 #
 
-ARG PULSAR_IMAGE_TAG
-FROM streamnative/pulsar:${PULSAR_IMAGE_TAG}
+set -e
 
-### Add test scripts
-COPY ./ /pulsar-io-sqs
+SRC_DIR=$(git rev-parse --show-toplevel)
+cd "$SRC_DIR"
+
+source ./.ci/integrations/start.sh
+mvn clean package -DskipTests
+mvn -Dtest=*IntegrationTest test -DfailIfNoTests=false
+source ./.ci/integrations/stop.sh
