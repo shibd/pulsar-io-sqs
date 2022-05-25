@@ -46,13 +46,15 @@ Before using the SQS sink connector, you need to configure it. Below are the pro
 
 You can create a configuration file (JSON or YAML) to set the following properties.
 
-| Name | Type|Required | Default | Description
-|------|----------|----------|---------|-------------|
-| `awsEndpoint` |String| false | " " (empty string) | AWS SQS end-point URL. It can be found at [here](https://docs.aws.amazon.com/general/latest/gr/sqs-service.html#sqs_region). |
-| `awsRegion` | String| true | " " (empty string) | Supported AWS region. For example, us-west-1, us-west-2. |
-| `awsCredentialPluginName` | String|false | " " (empty string) | Fully-qualified class name of implementation of `AwsCredentialProviderPlugin`. |
-| `awsCredentialPluginParam` | String|true | " " (empty string) | JSON parameter to initialize `AwsCredentialsProviderPlugin`. |
-| `queueName` | String|true | " " (empty string) | Name of the SQS queue that messages should be read from or written to. |
+| Name                       | Type   | Required | Default            | Description                                                                                                                                                                                                                                                                                                                                                  |
+|----------------------------|--------|----------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `awsEndpoint`              | String | false    | " " (empty string) | AWS SQS end-point URL. You can find it at [AWS SQS Service endpoints](https://docs.aws.amazon.com/general/latest/gr/sqs-service.html#sqs_region).                                                                                                                                                                                                                                 |
+| `awsRegion`                | String | true     | " " (empty string) | Supported AWS region. For example, us-west-1, us-west-2.                                                                                                                                                                                                                                                                                                     |
+| `awsCredentialPluginName`  | String | false    | " " (empty string) | Fully-qualified class name of implementation of `AwsCredentialProviderPlugin`. Built-in options are listed below. It is a factory class that creates an AWSCredentialsProvider that is used by the SQS connector. If it is empty, the SQS connector creates a default AWSCredentialsProvider which accepts a JSON-format map of credentials in `awsCredentialPluginParam`. |
+| `awsCredentialPluginParam` | String | true     | " " (empty string) | The JSON parameter to initialize `AwsCredentialsProviderPlugin`.                                                                                                                                                                                                                                                                                                 |
+| `queueName`                | String | true     | " " (empty string) | The name of the SQS queue that messages should be read from or written to.                                                                                                                                                                                                                                                                                       |
+
+### AWS Credential permissions
 
 The provided AWS credentials must have permissions to access AWS resources. To
 use the SQS sink connector, make sure the AWS credentials have the
@@ -60,6 +62,39 @@ following permissions to Amazon SQS API:
 
 - sqs:CreateQueue
 - sqs:SendMessage
+
+### Built-in AWS Credential plugins
+
+The following are built-in `AwsCredentialProviderPlugin` plugins:
+
+* ` ` (empty)
+
+  If the plugin is empty, the SQS connector creates a default AWSCredentialsProvider which accepts a JSON-format map of credentials in `awsCredentialPluginParam`.
+
+  The configuration of the default AWSCredentialsProvider is as follows:
+
+  ```json
+  {
+    "accessKey": "myKey",
+    "secretKey": "mySecretKey",
+  }
+  ```
+
+* `org.apache.pulsar.io.aws.AwsDefaultProviderChainPlugin`
+
+  This plugin takes no configuration, it uses the default AWS provider chain.
+
+  For more information, see [AWS documentation](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default).
+
+* `org.apache.pulsar.io.aws.STSAssumeRoleProviderPlugin`
+
+  This plugin takes a configuration (via the `awsCredentialPluginParam`) that describes a role to assume when running the SQS Client.
+
+  This configuration takes the form of a small JSON-format document like below:
+
+    ```json
+    {"roleArn": "arn...", "roleSessionName": "name"}
+    ```
 
 For more information about Amazon SQS API permissions, see [Amazon SQS API permissions: Actions and resource reference](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-api-permissions-reference.html).
 
