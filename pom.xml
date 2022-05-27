@@ -48,7 +48,7 @@
     <jackson.version>2.9.10.7</jackson.version>
     <lombok.version>1.16.22</lombok.version>
     <pulsar.version>2.9.0-rc-202110221101</pulsar.version>
-    <aws-java-sdk.version>1.11.106</aws-java-sdk.version>
+    <aws-java-sdk.version>1.12.228</aws-java-sdk.version>
 
     <!-- test dependencies -->
     <junit.version>4.13.1</junit.version>
@@ -341,7 +341,7 @@
     </pluginManagement>
 
     <plugins>
-      <!-- compile --> 
+      <!-- compile -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
