@@ -47,6 +47,8 @@ public class SQSConnectorConfigTest {
         assertNull("QueueName should not be set", config.getQueueName());
         assertEquals("AwsCredentialPluginName should not be set", "", config.getAwsCredentialPluginName());
         assertEquals("AwsCredentialPluginParam should not be set", "", config.getAwsCredentialPluginParam());
+        assertEquals("NumberOfConsumers should not be set", 0, config.getNumberOfConsumers());
+        assertEquals("BatchSizeOfOnceReceive should not be set", 0, config.getBatchSizeOfOnceReceive());
     }
 
     /*
@@ -61,6 +63,8 @@ public class SQSConnectorConfigTest {
         properties.put("queueName", "test-queue");
         properties.put("awsEndpoint", "https://some.endpoint.aws");
         properties.put("awsCredentialPluginParam", "{\"accessKey\":\"myKey\",\"secretKey\":\"my-Secret\"}");
+        properties.put("batchSizeOfOnceReceive", 10);
+        properties.put("numberOfConsumers", 20);
 
         SQSConnectorConfig config = SQSConnectorConfig.load(properties);
         assertEquals("Mismatched Region : " + config.getAwsRegion(),
@@ -71,6 +75,10 @@ public class SQSConnectorConfigTest {
                 "https://some.endpoint.aws", config.getAwsEndpoint());
         assertEquals("Mismatched awsCredentialPluginParam : " + config.getAwsCredentialPluginParam(),
                 "{\"accessKey\":\"myKey\",\"secretKey\":\"my-Secret\"}", config.getAwsCredentialPluginParam());
+        assertEquals("Mismatched batchSizeOfOnceReceive: " + config.getBatchSizeOfOnceReceive(),
+                10, config.getBatchSizeOfOnceReceive());
+        assertEquals("Mismatched numberOfConsumers: " + config.getNumberOfConsumers(),
+                20, config.getNumberOfConsumers());
     }
 
     /*
@@ -78,7 +86,7 @@ public class SQSConnectorConfigTest {
      */
     @Test
     public final void testMissingCredentialParam() {
-        Map<String, Object> properties = new HashMap<String, Object> ();
+        Map<String, Object> properties = new HashMap<String, Object>();
         properties.put("awsEndpoint", "https://some.endpoint.aws");
         properties.put("awsRegion", "us-east-1");
         properties.put("queueName", "test-queue");

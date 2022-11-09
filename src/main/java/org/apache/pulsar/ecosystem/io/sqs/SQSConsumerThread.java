@@ -37,6 +37,7 @@ public class SQSConsumerThread extends Thread {
         this.stopped = false;
         this.source = source;
         this.request = new ReceiveMessageRequest(source.getQueueUrl())
+                .withMaxNumberOfMessages(source.getConfig().getBatchSizeOfOnceReceive())
                 .withWaitTimeSeconds(SQSUtils.MAX_WAIT_TIME)
                 .withMessageAttributeNames("All")
                 .withAttributeNames(MessageSystemAttributeName.SentTimestamp.toString());

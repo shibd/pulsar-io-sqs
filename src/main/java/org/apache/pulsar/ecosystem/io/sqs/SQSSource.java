@@ -34,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.functions.api.Record;
 import org.apache.pulsar.io.core.Source;
@@ -45,7 +46,7 @@ import org.apache.pulsar.io.core.SourceContext;
 @Slf4j
 public class SQSSource extends SQSAbstractConnector implements Source<byte[]> {
 
-    private static final int DEFAULT_QUEUE_LENGTH = 1000;
+    private static final int DEFAULT_QUEUE_LENGTH = 10000;
 
     private static final String METRICS_TOTAL_SUCCESS = "_sqs_source_total_success_";
     private static final String METRICS_TOTAL_FAILURE = "_sqs_source_total_failure_";
@@ -58,13 +59,17 @@ public class SQSSource extends SQSAbstractConnector implements Source<byte[]> {
     public void open(Map<String, Object> map, SourceContext sourceContext) throws Exception {
         this.sourceContext = sourceContext;
         setConfig(SQSConnectorConfig.load(map));
+        this.getConfig().validate();
         prepareSqsClient();
 
         destinationTopic = sourceContext.getOutputTopic();
         queue = new LinkedBlockingQueue<>(this.getQueueLength());
-
-        executor = Executors.newFixedThreadPool(1);
-        executor.execute(new SQSConsumerThread(this));
+        int numberOfConsumer = getConfig().getNumberOfConsumers();
+        log.info("The number of message consumers are {}.", numberOfConsumer);
+        executor = Executors.newFixedThreadPool(numberOfConsumer);
+        IntStream.range(0, numberOfConsumer).forEach((i) -> {
+            executor.execute(new SQSConsumerThread(this));
+        });
     }
 
     public void fail(String messageHandle) {
@@ -73,7 +78,7 @@ public class SQSSource extends SQSAbstractConnector implements Source<byte[]> {
                 .withReceiptHandle(messageHandle)
                 .withVisibilityTimeout(SQSUtils.MAX_WAIT_TIME);
 
-        getClient().changeMessageVisibilityAsync(request,
+        getDeleteClient().changeMessageVisibilityAsync(request,
                 new AsyncHandler<ChangeMessageVisibilityRequest, ChangeMessageVisibilityResult>() {
                     @Override
                     public void onError(Exception e) {
@@ -96,7 +101,7 @@ public class SQSSource extends SQSAbstractConnector implements Source<byte[]> {
                 .withQueueUrl(getQueueUrl())
                 .withReceiptHandle(messageHandle);
 
-        getClient().deleteMessageAsync(request, new AsyncHandler<DeleteMessageRequest, DeleteMessageResult>() {
+        getDeleteClient().deleteMessageAsync(request, new AsyncHandler<DeleteMessageRequest, DeleteMessageResult>() {
             @Override
             public void onError(Exception e) {
                 ack(messageHandle); // retry
@@ -114,7 +119,7 @@ public class SQSSource extends SQSAbstractConnector implements Source<byte[]> {
 
     @Override
     public Record<byte[]> read() throws InterruptedException {
-            return this.queue.take();
+        return this.queue.take();
     }
 
     public void enqueue(Message msg) {

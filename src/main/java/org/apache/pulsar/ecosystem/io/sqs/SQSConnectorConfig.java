@@ -21,12 +21,14 @@ package org.apache.pulsar.ecosystem.io.sqs;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.amazonaws.services.sqs.buffered.AmazonSQSBufferedAsyncClient;
+import com.amazonaws.services.sqs.buffered.QueueBufferConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.io.aws.AwsCredentialProviderPlugin;
 import org.apache.pulsar.io.core.annotations.FieldDoc;
 
@@ -34,8 +36,12 @@ import org.apache.pulsar.io.core.annotations.FieldDoc;
  * The configuration class for {@link SQSSink} and {@link SQSSource}.
  */
 @Data
+@Slf4j
 public class SQSConnectorConfig implements Serializable {
     private static final long serialVersionUID = 1L;
+
+    public static final int DEFAULT_BATCH_SIZE_OF_ONCE_RECEIVE = 1;
+    public static final int DEFAULT_NUMBER_OF_SQS_CONSUMERS = 1;
 
     @FieldDoc(
             required = false,
@@ -73,14 +79,43 @@ public class SQSConnectorConfig implements Serializable {
             help = "json-parameters to initialize `AwsCredentialsProviderPlugin`")
     private String awsCredentialPluginParam = "";
 
+    @FieldDoc(
+            required = false,
+            defaultValue = "1",
+            help = "The maximum number of messages pulled from SQS at one time for SQS source. Default=1 and the max "
+                    + "value=10.")
+    private int batchSizeOfOnceReceive;
+
+    @FieldDoc(required = false,
+            defaultValue = "1",
+            help = "The expected numbers of consumers for SQS source. You can scale message consumers horizontally to "
+                    + "achieve high throughput. Default=1 and the max value=50.")
+    private int numberOfConsumers;
+
     public static SQSConnectorConfig load(Map<String, Object> map) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(new ObjectMapper().writeValueAsString(map), SQSConnectorConfig.class);
     }
 
+    public void validate() throws IllegalArgumentException {
+        if (batchSizeOfOnceReceive < 1 || batchSizeOfOnceReceive > 10) {
+            log.warn("The batchSizeOfOnceReceive: {} should be [1,10], using default {}.", batchSizeOfOnceReceive,
+                    DEFAULT_BATCH_SIZE_OF_ONCE_RECEIVE);
+            batchSizeOfOnceReceive = 1;
+        }
+        if (numberOfConsumers < 1 || numberOfConsumers > 50) {
+            log.warn("The numberOfConsumers: {} should be [1,50], using default {}.", numberOfConsumers,
+                    DEFAULT_NUMBER_OF_SQS_CONSUMERS);
+            numberOfConsumers = 1;
+        }
+    }
+
     public AmazonSQSBufferedAsyncClient buildAmazonSQSClient(AwsCredentialProviderPlugin credPlugin) {
         AmazonSQSAsyncClientBuilder builder = AmazonSQSAsyncClientBuilder.standard();
-
+        QueueBufferConfig config = new QueueBufferConfig()
+                .withMaxBatchSize(QueueBufferConfig.MAX_BATCH_SIZE_DEFAULT)
+                .withMaxInflightOutboundBatches(
+                        QueueBufferConfig.MAX_INFLIGHT_OUTBOUND_BATCHES_DEFAULT * numberOfConsumers);
         if (!this.getAwsEndpoint().isEmpty()) {
             builder.setEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
                     this.getAwsEndpoint(),
@@ -89,7 +124,7 @@ public class SQSConnectorConfig implements Serializable {
             builder.setRegion(this.getAwsRegion());
         }
         builder.setCredentials(credPlugin.getCredentialProvider());
-        return new AmazonSQSBufferedAsyncClient(builder.build());
+        return new AmazonSQSBufferedAsyncClient(builder.build(), config);
     }
 
 }
