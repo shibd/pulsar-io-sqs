@@ -23,7 +23,7 @@ set -e
 SRC_DIR=$(git rev-parse --show-toplevel)
 cd "$SRC_DIR"
 
-source ./.ci/integrations/start.sh
 mvn clean package -DskipTests
+source ./.ci/integrations/start.sh
 mvn -Dtest=*IntegrationTest test -DfailIfNoTests=false
 source ./.ci/integrations/stop.sh
