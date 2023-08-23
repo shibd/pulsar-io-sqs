@@ -16,7 +16,7 @@ The prerequisites for connecting an AWS SQS sink connector to external systems i
 
 1. Create SQS in AWS.
 2. Create the [AWS User](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) and create `AccessKey`(Please record `AccessKey` and `SecretAccessKey`).
-3. Assign permissions to `AWS User`:
+3. Assign the following permissions to the AWS User:
 - sqs:CreateQueue
 - sqs:SendMessage
 
@@ -29,7 +29,7 @@ Depending on the environment, there are several ways to create an AWS SQS sink c
 - [Create Connector with Function worker](https://pulsar.apache.org/docs/3.0.x/io-quickstart/).
   Using this way requires you to download a **NAR** package to create a built-in or non-built-in connector. You can download the version you need by clicking the **Download** icon on the upper-right corner of this page.
 - [Create Connector with Function mesh](https://functionmesh.io/docs/connectors/run-connector).
-  Using this way requires you to set the docker image. You can choose the version you want to launch from [here](https://hub.docker.com/r/streamnative/pulsar-io-sqs/tags)
+  Using this way requires you to set the docker image. You can choose the version you want to launch from [Docker Hub](https://hub.docker.com/r/streamnative/pulsar-io-sqs/tags).
 
 No matter how you create an AWS SQS sink connector, the minimum configuration contains the following parameters.
 
@@ -91,7 +91,7 @@ You can use the following simple code to receive messages from AWS SQS.
 ## Configuration Properties
 
 Before using the AWS SQS sink connector, you need to configure it. This table outlines the properties and the
-descriptions
+Descriptions of an AWS SQS sink connector.
 
 | Name                       | Type   | Required | Default            | Description                                                                                                                                                                                                                                                                                                                                                  |
 |----------------------------|--------|----------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -112,9 +112,9 @@ AWS SQS sink connector allows you to use three ways to connect to AWS SQS by con
   {"accessKey":"Your access key","secretKey":"Your secret key"}
   ```
 
-- Set `awsCredentialPluginName` to `org.apache.pulsar.io.aws.AwsDefaultProviderChainPlugin` to use the default AWS provider chain. With this option, you don’t need to configure `awsCredentialPluginParam`. For more information, see [AWS documentation](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default).
+- Set `awsCredentialPluginName` to `org.apache.pulsar.io.aws.AwsDefaultProviderChainPlugin` to use the default AWS provider chain. With this option, you don't need to configure `awsCredentialPluginParam`. For more information, see [AWS documentation](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default).
 
-- Set `awsCredentialPluginName`to `org.apache.pulsar.io.aws.STSAssumeRoleProviderPlugin` to use the [default AWS provider chain](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default), and you need to configure `roleArn` and `roleSessionNmae` in `awsCredentialPluginParam`. For more information, see [AWS documentation](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html)
+- Set `awsCredentialPluginName` to `org.apache.pulsar.io.aws.STSAssumeRoleProviderPlugin` to use the [default AWS provider chain](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default), and you need to configure `roleArn` and `roleSessionNmae` in `awsCredentialPluginParam`. For more information, see [AWS documentation](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html).
 
   ```json
   {"roleArn": "arn...", "roleSessionName": "name"}
