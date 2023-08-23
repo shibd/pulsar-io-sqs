@@ -21,9 +21,11 @@ package org.apache.pulsar.ecosystem.io.sqs;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.PurgeQueueRequest;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.pulsar.io.core.SinkContext;
+import org.apache.pulsar.io.core.SourceContext;
+import org.mockito.Mockito;
 
 /**
  * test utils.
@@ -38,9 +40,14 @@ public class SQSTestUtils {
         return properties;
     }
 
-    public static SQSConnectorConfig getTestConfig() throws IOException {
+    public static SQSConnectorConfig getSourceTestConfig() {
         Map<String, Object> properties = getTestConfigHashMap();
-        return SQSConnectorConfig.load(properties);
+        return SQSConnectorConfig.load(properties, Mockito.mock(SourceContext.class));
+    }
+
+    public static SQSConnectorConfig getSinkTestConfig() {
+        Map<String, Object> properties = getTestConfigHashMap();
+        return SQSConnectorConfig.load(properties, Mockito.mock(SinkContext.class));
     }
 
     public static void purgeSQSQueue(AmazonSQS client, String queueUrl) {

@@ -46,7 +46,7 @@ public class SQSSink extends SQSAbstractConnector implements Sink<GenericRecord>
     @Override
     public void open(Map<String, Object> map, SinkContext sinkContext) throws Exception {
         this.sinkContext = sinkContext;
-        setConfig(SQSConnectorConfig.load(map));
+        setConfig(SQSConnectorConfig.load(map, sinkContext));
         prepareSqsClient();
     }
 
