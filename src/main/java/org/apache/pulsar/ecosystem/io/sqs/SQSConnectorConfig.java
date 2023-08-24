@@ -22,14 +22,15 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.amazonaws.services.sqs.buffered.AmazonSQSBufferedAsyncClient;
 import com.amazonaws.services.sqs.buffered.QueueBufferConfig;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.io.aws.AwsCredentialProviderPlugin;
+import org.apache.pulsar.io.common.IOConfigUtils;
+import org.apache.pulsar.io.core.SinkContext;
+import org.apache.pulsar.io.core.SourceContext;
 import org.apache.pulsar.io.core.annotations.FieldDoc;
 
 /**
@@ -75,6 +76,7 @@ public class SQSConnectorConfig implements Serializable {
 
     @FieldDoc(
             required = false,
+            sensitive = true,
             defaultValue = "",
             help = "json-parameters to initialize `AwsCredentialsProviderPlugin`")
     private String awsCredentialPluginParam = "";
@@ -92,12 +94,17 @@ public class SQSConnectorConfig implements Serializable {
                     + "achieve high throughput. Default=1 and the max value=50.")
     private int numberOfConsumers;
 
-    public static SQSConnectorConfig load(Map<String, Object> map) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(new ObjectMapper().writeValueAsString(map), SQSConnectorConfig.class);
+    public static SQSConnectorConfig load(Map<String, Object> map, SinkContext context) {
+        return IOConfigUtils.loadWithSecrets(map, SQSConnectorConfig.class, context);
     }
 
-    public void validate() throws IllegalArgumentException {
+    public static SQSConnectorConfig load(Map<String, Object> map, SourceContext context) {
+        SQSConnectorConfig config = IOConfigUtils.loadWithSecrets(map, SQSConnectorConfig.class, context);
+        config.validateSourceConfig();
+        return config;
+    }
+
+    public void validateSourceConfig() throws IllegalArgumentException {
         if (batchSizeOfOnceReceive < 1 || batchSizeOfOnceReceive > 10) {
             log.warn("The batchSizeOfOnceReceive: {} should be [1,10], using default {}.", batchSizeOfOnceReceive,
                     DEFAULT_BATCH_SIZE_OF_ONCE_RECEIVE);

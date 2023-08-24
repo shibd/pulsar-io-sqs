@@ -18,7 +18,7 @@
  */
 package org.apache.pulsar.ecosystem.io.sqs.integrations;
 
-import static org.apache.pulsar.ecosystem.io.sqs.SQSTestUtils.getTestConfig;
+import static org.apache.pulsar.ecosystem.io.sqs.SQSTestUtils.getSinkTestConfig;
 import static org.apache.pulsar.ecosystem.io.sqs.SQSTestUtils.purgeSQSQueue;
 
 import com.amazonaws.services.sqs.buffered.AmazonSQSBufferedAsyncClient;
@@ -88,7 +88,7 @@ public class SQSSinkIntegrationTest extends AbstractAwsConnector {
     }
 
     public void prepareSQSClient() throws Exception {
-        SQSConnectorConfig config = getTestConfig();
+        SQSConnectorConfig config = getSinkTestConfig();
         config.setQueueName(SQS_QUEUE_NAME);
         AwsCredentialProviderPlugin credentialsProvider = createCredentialProvider(
                 config.getAwsCredentialPluginName(),

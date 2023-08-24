@@ -58,8 +58,7 @@ public class SQSSource extends SQSAbstractConnector implements Source<byte[]> {
     @Override
     public void open(Map<String, Object> map, SourceContext sourceContext) throws Exception {
         this.sourceContext = sourceContext;
-        setConfig(SQSConnectorConfig.load(map));
-        this.getConfig().validate();
+        setConfig(SQSConnectorConfig.load(map, sourceContext));
         prepareSqsClient();
 
         destinationTopic = sourceContext.getOutputTopic();

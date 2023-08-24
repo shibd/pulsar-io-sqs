@@ -20,13 +20,15 @@ package org.apache.pulsar.ecosystem.io.sqs;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.pulsar.io.core.SinkContext;
+import org.apache.pulsar.io.core.SourceContext;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  * Unit test {@link SQSConnectorConfig}.
@@ -35,29 +37,18 @@ public class SQSConnectorConfigTest {
 
     /*
      * Test Case: load the configuration from an empty property map.
-     *
-     * @throws IOException when failed to load the property map
      */
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testLoadEmptyPropertyMap() throws IOException {
         Map<String, Object> emptyMap = Collections.emptyMap();
-        SQSConnectorConfig config = SQSConnectorConfig.load(emptyMap);
-        assertNull("Region should not be set", config.getAwsRegion());
-        assertEquals("Endpoint should not be set", "", config.getAwsEndpoint());
-        assertNull("QueueName should not be set", config.getQueueName());
-        assertEquals("AwsCredentialPluginName should not be set", "", config.getAwsCredentialPluginName());
-        assertEquals("AwsCredentialPluginParam should not be set", "", config.getAwsCredentialPluginParam());
-        assertEquals("NumberOfConsumers should not be set", 0, config.getNumberOfConsumers());
-        assertEquals("BatchSizeOfOnceReceive should not be set", 0, config.getBatchSizeOfOnceReceive());
+        SQSConnectorConfig.load(emptyMap, Mockito.mock(SinkContext.class));
     }
 
     /*
      * Test Case: load the configuration from a property map.
-     *
-     * @throws IOException when failed to load the property map
      */
     @Test
-    public void testLoadPropertyMap() throws IOException {
+    public void testLoadPropertyMap() {
         Map<String, Object> properties = new HashMap<>();
         properties.put("awsRegion", "us-east-1");
         properties.put("queueName", "test-queue");
@@ -66,7 +57,7 @@ public class SQSConnectorConfigTest {
         properties.put("batchSizeOfOnceReceive", 10);
         properties.put("numberOfConsumers", 20);
 
-        SQSConnectorConfig config = SQSConnectorConfig.load(properties);
+        SQSConnectorConfig config = SQSConnectorConfig.load(properties, Mockito.mock(SourceContext.class));
         assertEquals("Mismatched Region : " + config.getAwsRegion(),
                 "us-east-1", config.getAwsRegion());
         assertEquals("Mismatched queueName : " + config.getQueueName(),
@@ -97,6 +88,24 @@ public class SQSConnectorConfigTest {
         } catch (Exception ex) {
             assertNotNull("Missing param should lead to exception", ex);
         }
+    }
+
+    /*
+     * Test Case: Load awsCredentialPluginParam from secret.
+     */
+    @Test
+    public final void testLoadConfigFromSecret() {
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.put("awsRegion", "us-east-1");
+        properties.put("queueName", "test-queue");
+
+        SinkContext sinkContext = Mockito.mock(SinkContext.class);
+        Mockito.when(sinkContext.getSecret("awsCredentialPluginParam")).thenReturn("mock-credential");
+
+        SQSConnectorConfig config = SQSConnectorConfig.load(properties, sinkContext);
+        assertEquals("us-east-1", config.getAwsRegion());
+        assertEquals("test-queue", config.getQueueName());
+        assertEquals("mock-credential", config.getAwsCredentialPluginParam());
     }
 
 }
