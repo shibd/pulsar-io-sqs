@@ -64,7 +64,9 @@ You can use the following simple code to send messages to AWS SQS.
 
 ### 3. Show data using Pulsar client
 
-> **Note:** If your connector is created on StreamNative Cloud, you need to authenticate your clients. See [Build applications using Pulsar clients](https://docs.streamnative.io/docs/qs-connect#jumpstart-for-beginners) for more information.
+{% callout title="Note" type="note" %}
+If your connector is created on StreamNative Cloud, you need to authenticate your clients. See [Build applications using Pulsar clients](https://docs.streamnative.io/docs/qs-connect#jumpstart-for-beginners) for more information.
+{% /callout %}
 
 ``` shell
 bin/pulsar-client \
@@ -90,8 +92,9 @@ Descriptions of an AWS SQS source connector.
 | `batchSizeOfOnceReceive`   | int    | false    | 1                  | The maximum number of messages that are pulled from SQS at one time. By default, it is set to 1. The value ranges from 1 to 10.                                                                                                                                                                                                                                                         |
 | `numberOfConsumers`        | int    | false    | 1                  | The expected numbers of consumers. You can scale consumers horizontally to achieve high throughput. By default, it is set to 1. The value ranges from 1 to 50.                                                                                                                                                                                                       |
 
-> **Note**  
-> The `batchSizeOfOnceReceive ` and `numberOfConsumers` options are available for SQS source 2.8.4.3+, 2.9.4.1+, and 2.10.1.13+. For details about how to test AWS SQS source performance, see [Performance Test on AWS SQS Source Connector](https://github.com/streamnative/pulsar-io-sqs/blob/master/docs/source_performance_test.md).
+{% callout title="Note" type="note" %}
+The `batchSizeOfOnceReceive ` and `numberOfConsumers` options are available for SQS source 2.8.4.3+, 2.9.4.1+, and 2.10.1.13+. For details about how to test AWS SQS source performance, see [Performance Test on AWS SQS Source Connector](https://github.com/streamnative/pulsar-io-sqs/blob/master/docs/source_performance_test.md).
+{% /callout %}
 
 ### Configure AwsCredentialProviderPlugin
 
