@@ -1,5 +1,6 @@
 ---
 dockerfile: "https://hub.docker.com/r/streamnative/pulsar-io-sqs"
+download: "https://github.com/streamnative/pulsar-io-sqs/releases"
 alias: AWS SQS Sink Connector
 ---
 
@@ -7,370 +8,117 @@ The [AWS Simple Queue Service (SQS)](https://aws.amazon.com/sqs/?nc1=h_ls) sink 
 
 ![](/docs/sqs-sink.png)
 
-# How to get 
-
-You can get the SQS sink connector using one of the following methods.
-
-## Use it with Function Worker
-
-- Download the NAR package from [here](https://github.com/streamnative/pulsar-io-sqs/releases/download/v{{connector:version}}/pulsar-io-sqs-{{connector:version}}.nar).
-
-- Build it from the source code.
-
-  1. Clone the source code to your machine.
-
-     ```bash
-     git clone https://github.com/streamnative/pulsar-io-sqs.git
-     ```
-
-  2. Assume that `PULSAR_IO_SQS_HOME` is the home directory for the `pulsar-io-sqs` repo. Build the connector in the `${PULSAR_IO_SQS_HOME}` directory.
-
-     ```bash
-     mvn clean install -DskipTests
-     ```
-
-     After the connector is successfully built, a `NAR` package is generated under the `target` directory. 
-
-     ```bash
-     ls target
-     pulsar-io-sqs-{{connector:version}}.nar
-     ```
-
-## Use it with Function Mesh
-
-Pull the SQS connector Docker image from [here](https://hub.docker.com/r/streamnative/pulsar-io-sqs).
-
-# How to configure 
-
-Before using the SQS sink connector, you need to configure it. Below are the properties and their descriptions.
-
-You can create a configuration file (JSON or YAML) to set the following properties.
-
-| Name                       | Type   | Required | Default            | Description                                                                                                                                                                                                                                                                                                                                                  |
-|----------------------------|--------|----------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `awsEndpoint`              | String | false    | " " (empty string) | AWS SQS end-point URL. You can find it at [AWS SQS Service endpoints](https://docs.aws.amazon.com/general/latest/gr/sqs-service.html#sqs_region).                                                                                                                                                                                                                                 |
-| `awsRegion`                | String | true     | " " (empty string) | Supported AWS region. For example, us-west-1, us-west-2.                                                                                                                                                                                                                                                                                                     |
-| `awsCredentialPluginName`  | String | false    | " " (empty string) | Fully-qualified class name of implementation of `AwsCredentialProviderPlugin`. Built-in options are listed below. It is a factory class that creates an AWSCredentialsProvider that is used by the SQS connector. If it is empty, the SQS connector creates a default AWSCredentialsProvider which accepts a JSON-format map of credentials in `awsCredentialPluginParam`. |
-| `awsCredentialPluginParam` | String | true     | " " (empty string) | The JSON parameter to initialize `AwsCredentialsProviderPlugin`.                                                                                                                                                                                                                                                                                                 |
-| `queueName`                | String | true     | " " (empty string) | The name of the SQS queue that messages should be read from or written to.                                                                                                                                                                                                                                                                                       |
-
-### AWS Credential permissions
-
-The provided AWS credentials must have permissions to access AWS resources. To
-use the SQS sink connector, make sure the AWS credentials have the
-following permissions to Amazon SQS API:
-
-- sqs:CreateQueue
-- sqs:SendMessage
-
-### Built-in AWS Credential plugins
-
-The following are built-in `AwsCredentialProviderPlugin` plugins:
-
-* ` ` (empty)
-
-  If the plugin is empty, the SQS connector creates a default AWSCredentialsProvider which accepts a JSON-format map of credentials in `awsCredentialPluginParam`.
-
-  The configuration of the default AWSCredentialsProvider is as follows:
-
-  ```json
-  {
-    "accessKey": "myKey",
-    "secretKey": "mySecretKey",
-  }
-  ```
-
-* `org.apache.pulsar.io.aws.AwsDefaultProviderChainPlugin`
-
-  This plugin takes no configuration, it uses the default AWS provider chain.
-
-  For more information, see [AWS documentation](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default).
-
-* `org.apache.pulsar.io.aws.STSAssumeRoleProviderPlugin`
-
-  This plugin takes a configuration (via the `awsCredentialPluginParam`) that describes a role to assume when running the SQS Client.
-
-  This configuration takes the form of a small JSON-format document like below:
-
-    ```json
-    {"roleArn": "arn...", "roleSessionName": "name"}
-    ```
-
-For more information about Amazon SQS API permissions, see [Amazon SQS API permissions: Actions and resource reference](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-api-permissions-reference.html).
-
-## Configure it with Function Worker
-
-You can create a configuration file (JSON or YAML) to set the properties as below.
-
-**Example**
-
-* JSON 
-
-   ```json
-    {
-        "tenant": "public",
-        "namespace": "default",
-        "name": "sqs-sink",
-        "inputs": [
-          "test-queue-pulsar"
-        ],
-        "archive": "connectors/pulsar-io-sqs-{{connector:version}}.nar",
-        "parallelism": 1,
-        "configs":
-        {
-            "awsEndpoint": "https://sqs.us-west-2.amazonaws.com",
-            "awsRegion": "us-west-2",
-            "queueName": "test-queue",
-            "awsCredentialPluginName": "",
-            "awsCredentialPluginParam": '{"accessKey":"myKey","secretKey":"my-Secret"}'
-        }
-    }
-    ```
-
-* YAML
-
-   ```yaml
-   tenant: "public"
-   namespace: "default"
-   name: "sqs-sink"
-   inputs: 
-      - "test-queue-pulsar"
-   archive: "connectors/pulsar-io-sqs-{{connector:version}}.nar"
-   parallelism: 1
-
-   configs:
-      awsEndpoint: "https://sqs.us-west-2.amazonaws.com"
-      awsRegion: "us-west-2"
-      queueName: "test-queue"
-      awsCredentialPluginName: ""
-      awsCredentialPluginParam: '{"accessKey":"myKey","secretKey":"my-Secret"}'
-    ```
-
-## Configure it with Function Mesh
-
-You can submit a [CustomResourceDefinitions (CRD)](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) to create an SQS sink connector. Using CRD makes Function Mesh naturally integrate with the Kubernetes ecosystem. For more information about Pulsar sink CRD configurations, see [here](https://functionmesh.io/docs/connectors/io-crd-config/sink-crd-config).
-
-You can define a CRD file (YAML) to set the properties as below.
-
-```yaml
-apiVersion: compute.functionmesh.io/v1alpha1
-kind: Sink
-metadata:
-  name: sqs-sink-sample
-spec:
-  image: streamnative/pulsar-io-sqs:{{connector:version}}
-  className: org.apache.pulsar.ecosystem.io.sqs.SQSSource
-  replicas: 1
-  maxReplicas: 1
-  input:
-    topics: 
-    - persistent://public/default/destination
-    typeClassName: “[B”
-  sinkConfig:
-    awsEndpoint: "https://sqs.us-west-2.amazonaws.com"
-    awsRegion: "us-west-2"
-    queueName: "test-queue"
-    awsCredentialPluginName: ""
-    awsCredentialPluginParam: '{"accessKey":"myKey","secretKey":"my-Secret"}'
-  pulsar:
-    pulsarConfig: "test-pulsar-sink-config"
-  resources:
-    limits:
-    cpu: "0.2"
-    memory: 1.1G
-    requests:
-    cpu: "0.1"
-    memory: 1G
-  java:
-    jar: connectors/pulsar-io-sqs-{{connector:version}}.nar
-  clusterName: test-pulsar
-  autoAck: true
-```
-
-# How to use
-
-You can use the SQS sink connector with Function Worker or Function Mesh.
-
-## Use it with Function Worker
-
-You can use the SQS sink connector as a non built-in connector or a built-in connector.
-
-### Use it as non built-in connector
-
-If you already have a Pulsar cluster, you can use the SQS sink connector as a non built-in connector directly.
-
-This example shows how to create an SQS sink connector on a Pulsar cluster using the [`pulsar-admin sinks create`](http://pulsar.apache.org/tools/pulsar-admin/2.8.0-SNAPSHOT/#-em-create-em--24) command.
-
-```
-PULSAR_HOME/bin/pulsar-admin sinks create \
---archive pulsar-io-sqs-{{connector:version}}.nar \
---sink-config-file sqs-sink-config.yaml \
---classname org.apache.pulsar.ecosystem.io.sqs.SQSSink \
---name sqs-sink
-```
-
-### Use it as built-in connector
-
-You can make the SQS sink connector as a built-in connector and use it on a standalone cluster or on-premises cluster.
-
-### Standalone cluster
-
-This example describes how to use the SQS sink connector to pull data from Pulsar topics and persist data to SQS in standalone mode.
-
-1. Prepare SQS service. 
- 
-    For more information, see [Getting Started with Amazon SQS](https://aws.amazon.com/sqs/getting-started/).
-
-2. Copy the NAR package of the SQS connector to the Pulsar connectors directory.
-
-    ```
-    cp pulsar-io-sqs-{{connector:version}}.nar PULSAR_HOME/connectors/pulsar-io-sqs-{{connector:version}}.nar
-    ```
-
-3. Start Pulsar in standalone mode.
-
-    ```
-    PULSAR_HOME/bin/pulsar standalone
-    ```
-
-4. Run the SQS sink connector locally.
-
-    ```
-    PULSAR_HOME/bin/pulsar-admin sink localrun \
-    --sink-type sqs \
-    --sink-config-file sqs-sink-config.yaml
-    ```
-
-5. Send messages to Pulsar topics.
-
-    ```
-    PULSAR_HOME/bin/pulsar-client produce public/default/test-queue-pulsar --messages hello -n 10
-    ```
-
-6. Consume messages from the SQS queue using the [AWS SQS CLI tool](https://aws.amazon.com/cli/). 
-
-    ```
-    aws sqs receive-message --queue-url ${QUEUE_URL} --max-number-of-messages 10
-    ```
-
-    Now you can see the messages containing "Hello From Pulsar" from AWS SQS CLI.
-
-#### On-premises cluster
-
-This example explains how to create an SQS sink connector in an on-premises cluster.
-
-1. Copy the NAR package of the SQS connector to the Pulsar connectors directory.
-
-    ```
-    cp pulsar-io-sqs-{{connector:version}}.nar $PULSAR_HOME/connectors/pulsar-io-sqs-{{connector:version}}.nar
-    ```
-
-2. Reload all [built-in connectors](https://pulsar.apache.org/docs/en/next/io-connectors/).
-
-    ```
-    PULSAR_HOME/bin/pulsar-admin sinks reload
-    ```
-
-3. Check whether the SQS sink connector is available on the list or not.
-
-    ```
-    PULSAR_HOME/bin/pulsar-admin sinks available-sinks
-    ```
-
-4. Create an SQS sink connector on a Pulsar cluster using the [`pulsar-admin sinks create`](http://pulsar.apache.org/tools/pulsar-admin/2.8.0-SNAPSHOT/#-em-create-em--24) command.
-
-    ```
-    PULSAR_HOME/bin/pulsar-admin sinks create \
-    --sink-type sqs \
-    --sink-config-file sqs-sink-config.yaml \
-    --name sqs-sink
-    ```
-
-## Use it with Function Mesh
-
-This example demonstrates how to create an SQS sink connector through Function Mesh.
+## Quick start
 
 ### Prerequisites
 
-- Create and connect to a [Kubernetes cluster](https://kubernetes.io/).
+The prerequisites for connecting an AWS SQS sink connector to external systems include:
 
-- Create a [Pulsar cluster](https://pulsar.apache.org/docs/en/kubernetes-helm/) in the Kubernetes cluster.
-
-- [Install the Function Mesh Operator and CRD](https://functionmesh.io/docs/install-function-mesh/) into the Kubernetes cluster.
-
-- Prepare SQS service. 
-
-  For more information, see [Getting Started with Amazon SQS](https://aws.amazon.com/sqs/getting-started/).
-
-### Step
-
-1. Define the SQS sink connector with a YAML file and save it as `sink-sample.yaml`.
-
-    This example shows how to publish the SQS sink connector to Function Mesh with a Docker image.
-
-    ```yaml
-    apiVersion: compute.functionmesh.io/v1alpha1
-    kind: Sink
-    metadata:
-    name: sqs-sink-sample
-    spec:
-    image: streamnative/pulsar-io-sqs:{{connector:version}}
-    className: org.apache.pulsar.ecosystem.io.sqs.SQSSource
-    replicas: 1
-    maxReplicas: 1
-    input:
-        topics: 
-        - persistent://public/default/destination
-        typeClassName: “[B”
-    sinkConfig:
-        awsEndpoint: "https://sqs.us-west-2.amazonaws.com"
-        awsRegion: "us-west-2"
-        queueName: "test-queue"
-        awsCredentialPluginName: ""
-        awsCredentialPluginParam: '{"accessKey":"myKey","secretKey":"my-Secret"}'
-    pulsar:
-        pulsarConfig: "test-pulsar-sink-config"
-    resources:
-        limits:
-        cpu: "0.2"
-        memory: 1.1G
-        requests:
-        cpu: "0.1"
-        memory: 1G
-    java:
-        jar: connectors/pulsar-io-sqs-{{connector:version}}.nar
-    clusterName: test-pulsar
-    autoAck: true
-    ```
+1. Create SQS in AWS.
+2. Create the [AWS User](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) and create `AccessKey`(Please record `AccessKey` and `SecretAccessKey`).
+3. Assign the following permissions to the AWS User:
+- sqs:CreateQueue
+- sqs:SendMessage
 
 
-1. Apply the YAML file to create the SQS sink connector.
+### 1. Create a connector
 
-    **Input**
+Depending on the environment, there are several ways to create an AWS SQS sink connector:
 
-    ```
-    kubectl apply -f  <path-to-sink-sample.yaml>
-    ```
+- [Create Connector on StreamNative Cloud](https://docs.streamnative.io/docs/connector-create).
+- [Create Connector with Function worker](https://pulsar.apache.org/docs/3.0.x/io-quickstart/).
+  Using this way requires you to download a **NAR** package to create a built-in or non-built-in connector. You can download the version you need by clicking the **Download** icon on the upper-right corner of this page.
+- [Create Connector with Function mesh](https://functionmesh.io/docs/connectors/run-connector).
+  Using this way requires you to set the docker image. You can choose the version you want to launch from [Docker Hub](https://hub.docker.com/r/streamnative/pulsar-io-sqs/tags).
 
-    **Output**
+No matter how you create an AWS SQS sink connector, the minimum configuration contains the following parameters.
 
-    ```
-    sink.compute.functionmesh.io/sqs-sink-sample created
-    ```
+```yaml
+configs:
+  awsRegion: "Your AWS SQS region"
+  queueName: "Your AWS SQS name"
+  awsCredentialPluginParam: "{\"accessKey\":\"Your access key\",\"secretKey\":\"Your secret key\"}"
+```
+> * The configuration structure varies depending on how you create the AWS SQS sink connector.
+    >  For example, some are **JSON**, some are **YAML**, and some are **Kubernetes YAML**. You need to adapt the configs to the corresponding format.
+>
+> * If you want to configure more parameters, see [Configuration Properties](#configuration-properties) for reference.
 
-2. Check whether the SQS sink connector is created successfully.
+### 2. Send messages to the topic
 
-    **Input**
+{% callout title="Note" type="note" %}
+If your connector is created on StreamNative Cloud, you need to authenticate your clients. See [Build applications using Pulsar clients](https://docs.streamnative.io/docs/qs-connect#jumpstart-for-beginners) for more information.
+{% /callout %}
 
-    ```
-    kubectl get all
-    ```
+``` java
+        PulsarClient client = PulsarClient.builder()
+            .serviceUrl("{{Your Pulsar URL}}")
+            .build();
 
-    **Output**
+        Producer<String> producer = client.newProducer(Schema.STRING)
+            .topic("{{Your topic name}}")
+            .create();
 
-    ```
-    NAME                                READY   STATUS      RESTARTS   AGE
-    pod/sqs-sink-sample-0               1/1     Running     0          77s
-    ```
+        String message = "test-message";
+        MessageId msgID = producer.send(message);
+        System.out.println("Publish " + message + " and message ID " + msgID);
+        
+        producer.flush();
+        producer.close();
+        client.close();
+```
 
-    After that, you can produce and consume messages using the SQS sink connector between Pulsar and SQS.
+### 3. Show data on AWS SQS
+You can use the following simple code to receive messages from AWS SQS.
+
+``` java
+    public static void main(String[] args) {
+
+        AmazonSQS client = AmazonSQSClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(
+                        new BasicAWSCredentials("Your access key", "Your secret key")))
+                .withRegion("Your AWS SQS region").build();
+
+        String queueUrl = client.getQueueUrl(new GetQueueUrlRequest("Your SQS name")).getQueueUrl();
+        ReceiveMessageResult receiveMessageResult = client.receiveMessage(queueUrl);
+        for (Message message : receiveMessageResult.getMessages()) {
+            System.out.println("Receive msg: " + message.getBody());
+        }
+        client.shutdown();
+    }
+    
+    // Output
+    // Receive msg: test-message
+```
+
+## Configuration Properties
+
+Before using the AWS SQS sink connector, you need to configure it. This table outlines the properties and the
+Descriptions of an AWS SQS sink connector.
+
+| Name                       | Type   | Required | Default            | Description                                                                                                                                                                                                                                                                                                                                                  |
+|----------------------------|--------|----------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `awsRegion`                | String | true     | " " (empty string) | Supported AWS region. For example, us-west-1, us-west-2.                                                                                                                                                                                                                                                                                                     |
+| `queueName`                | String | true     | " " (empty string) | The name of the SQS queue that messages should be read from or written to.                                                                                                                                                                                                                                                                                       |
+| `awsCredentialPluginName`  | String | false    | " " (empty string) | The fully-qualified class name of implementation of [AwsCredentialProviderPlugin](https://github.com/apache/pulsar/blob/master/pulsar-io/aws/src/main/java/org/apache/pulsar/io/aws/AwsCredentialProviderPlugin.java). For more information, see [Configure AwsCredentialProviderPlugin](###Configure AwsCredentialProviderPlugin). |
+| `awsCredentialPluginParam` | String | false     | " " (empty string) | The JSON parameter to initialize `awsCredentialsProviderPlugin`. For more information, see [Configure AwsCredentialProviderPlugin](###Configure AwsCredentialProviderPlugin). |
+| `awsEndpoint`              | String | false    | " " (empty string) | AWS SQS end-point URL. You can find it at [AWS SQS Service endpoints](https://docs.aws.amazon.com/general/latest/gr/sqs-service.html#sqs_region).                                                                                                                                                                                                                                 |
+
+
+### Configure AwsCredentialProviderPlugin
+
+AWS SQS sink connector allows you to use three ways to connect to AWS SQS by configuring `awsCredentialPluginName`.
+
+- Leave `awsCredentialPluginName` empty to get the connector authenticated by passing `accessKey` and `secretKey` in `awsCredentialPluginParam`.
+
+  ```json
+  {"accessKey":"Your access key","secretKey":"Your secret key"}
+  ```
+
+- Set `awsCredentialPluginName` to `org.apache.pulsar.io.aws.AwsDefaultProviderChainPlugin` to use the default AWS provider chain. With this option, you don't need to configure `awsCredentialPluginParam`. For more information, see [AWS documentation](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default).
+
+- Set `awsCredentialPluginName` to `org.apache.pulsar.io.aws.STSAssumeRoleProviderPlugin` to use the [default AWS provider chain](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default), and you need to configure `roleArn` and `roleSessionNmae` in `awsCredentialPluginParam`. For more information, see [AWS documentation](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html).
+
+  ```json
+  {"roleArn": "arn...", "roleSessionName": "name"}
+  ```
