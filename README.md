@@ -16,9 +16,11 @@ The [AWS Simple Queue Service (SQS)](https://aws.amazon.com/sqs/?nc1=h_ls) conne
 
 Currently, SQS connector versions (`x.y.z`) are based on Pulsar versions (`x.y.z`).
 
-| SQS connector version | Pulsar version | Doc |
-| :---------- | :------------------- | :------------- |
-[2.7.0](https://github.com/streamnative/pulsar-io-sqs/releases/tag/v2.7.0)| [2.7.0](http://pulsar.apache.org/en/download/) | - [SQS source connector](https://hub.streamnative.io/connectors/sqs-source/2.7.0)<br><br>- [SQS sink connector](https://hub.streamnative.io/connectors/sqs-sink/2.7.0)
+| SQS connector version                                                          | Pulsar version                                  | Doc                                                                                                                                                                            |
+|:-------------------------------------------------------------------------------|:------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [2.10.x](https://github.com/streamnative/pulsar-io-sqs/releases/tag/v2.10.5.5) | [2.10.5](http://pulsar.apache.org/en/download/) | - [SQS source connector](https://docs.streamnative.io/hub/connector-sqs-source-v2.10)<br><br>- [SQS sink connector](https://docs.streamnative.io/hub/connector-sqs-sink-v2.10) |
+| [3.0.x](https://github.com/streamnative/pulsar-io-sqs/releases/tag/v3.0.1.4)   | [3.0.1](http://pulsar.apache.org/en/download/)  | - [SQS source connector](https://docs.streamnative.io/hub/connector-sqs-source-v3.0)<br><br>- [SQS sink connector](https://docs.streamnative.io/hub/connector-sqs-sink-v3.0)   |
+| [3.1.x](https://github.com/streamnative/pulsar-io-sqs/releases/tag/v3.1.0.4)   | [3.1.0](http://pulsar.apache.org/en/download/)  | - [SQS source connector](https://docs.streamnative.io/hub/connector-sqs-source-v3.1)<br><br>- [SQS sink connector](https://docs.streamnative.io/hub/connector-sqs-sink-v3.1)   |
 
 ## Project layout
 
