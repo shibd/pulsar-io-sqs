@@ -33,14 +33,14 @@ Regarding the Apache Pulsar SQS sink connector scenarios:
 ### Issues with schema messages conversion
 Currently, the AWS SQS sink connector does not handle message convert with schema; it simply calls the `nativeObject.toString()` method. Refer to:
 
-https://github.com/streamnative/pulsar-io-sqs/blob/7b6eb2bc78d6ba0ee7ab5c6e18d2e60ba9ffada5/src/main/java/org/apache/pulsar/ecosystem/io/sqs/SQSSink.java#L99-L110
+https://github.com/streamnative/pulsar-io-sqs/blob/7b6eb2bc78d6ba0ee7ab5c6e18d2e60ba9ffada5/src/main/java/org/apache/pulsar/ecosystem/io/sqs/SQSSink.java#L103-L108
 
 This is a bug. That will send the address of the `nativeObject` to AWS SQS, such as: `[B@49dfbf49`.
 
 ### Issues with metadata conversion
-Currently, this connector only processes pulsar metadata sparingly. Just put the `MessageKey` into the `message attribute`. Refer to:
+Currently, this connector only processes pulsar metadata sparingly. Just put the `MessageKey` and `Properties` into the `message attribute`. Refer to:
 
-https://github.com/streamnative/pulsar-io-sqs/blob/7b6eb2bc78d6ba0ee7ab5c6e18d2e60ba9ffada5/src/main/java/org/apache/pulsar/ecosystem/io/sqs/SQSSink.java#L112-L133
+https://github.com/streamnative/pulsar-io-sqs/blob/7b6eb2bc78d6ba0ee7ab5c6e18d2e60ba9ffada5/src/main/java/org/apache/pulsar/ecosystem/io/sqs/SQSSink.java#L116-L118
 
 The problem with this approach is that users cannot flexibly customize the metadata they want.
 
