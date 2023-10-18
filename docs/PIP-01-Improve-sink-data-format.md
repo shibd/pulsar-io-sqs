@@ -138,9 +138,9 @@ The supported metadata fields of Pulsar are:
 - `sequence`: The `number` type of the sequence ID.
 - `properties`: This is a map, and will unfold this map, placing each key-value pair into the SQS `message attribute`. The type of the key is `string`, and the type of the value is `string`.
 - `eventTime`: The event time of the message in the [ISO 8601 format](https://www.w3.org/TR/NOTE-datetime)
-- `messageId`: The string representation of a message ID. eg, '1:1:-1:-1'
+- `messageId`: The string representation of a message ID. eg, `"1:1:-1:-1"`
 
-To maintain the [current key definition rules](https://github.com/streamnative/pulsar-io-sqs/blob/39dbd34d84f27887cb682fe5295c91dd2eb5f790/src/main/java/org/apache/pulsar/ecosystem/io/sqs/SQSUtils.java#L30), each metadata key will be prefixed with 'pulsar.'
+To maintain the [current key definition rules](https://github.com/streamnative/pulsar-io-sqs/blob/39dbd34d84f27887cb682fe5295c91dd2eb5f790/src/main/java/org/apache/pulsar/ecosystem/io/sqs/SQSUtils.java#L30), each metadata key will be prefixed with `pulsar.`
 
 For examples:
 ```yaml
