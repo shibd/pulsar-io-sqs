@@ -124,7 +124,7 @@ Here is an example:
 ```
 
 ##### For non-schema:
-Keep the [current logic](https://github.com/streamnative/pulsar-io-sqs/blob/7b6eb2bc78d6ba0ee7ab5c6e18d2e60ba9ffada5/src/main/java/org/apache/pulsar/ecosystem/io/sqs/SQSSink.java#L100-L101) for data without a schema: Retrieve the `byte array` from the message record and convert it into a string using UTF-8 encoding.
+The bytes array is converted to a base64-encoded string.
 
 #### Customize Pulsar metadata
 
@@ -153,15 +153,12 @@ For examples:
 "pulsar.eventTime": "2023-10-17T04:30:33.123456789"
 "pulsar.messageId": "1:1:-1:-1"
 ```
-Users can choose the metadata fields through the `metaDataField` configuration. It is a `string array`. And this connector will verify that the number of metadata cannot exceed 10.
+Users can choose the metadata fields through the `metaDataField` configuration. It is a `string`, multiple fields are separated by commas. And this connector will verify that the number of metadata cannot exceed 10.
 
 For examples:
 ```yaml
 config:
-  metaDataField: 
-    - pulsar.key
-    - pulsar.topic
-    - pulsar.properties.key1
+  metaDataField: 'pulsar.topic, pulsar.key,  pulsar.partitionIndex, pulsar.sequence,  pulsar.properties.key1'
 ```
 
 
@@ -206,11 +203,11 @@ Added the `metaDataField` configurations to the SQSConnectorConfig:
 ```java
 @FieldDoc(
         required = false,
-        defaultValue = "[\"pulsar.key\"]",
+        defaultValue = "pulsar.key",
         help = "The metadata fields to be sent to the SQS message attributes."
-                + "Valid values are [\"pulsar.topic\",\"pulsar.key\",\"pulsar.partitionIndex\",\"pulsar" + ".sequence\",\"pulsar.properties.{{Your properties key}}\", \"pulsar.eventTime\"]\""
+                + "Valid values are 'pulsar.topic, pulsar.key, pulsar.partitionIndex, pulsar.sequence,pulsar.properties.{{Your properties key}}, pulsar.eventTime'"
 )
-private List<String> metadataFields;
+private String metadataFields;
 ```
 
 
