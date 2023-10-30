@@ -82,6 +82,12 @@ For the primitive type, the data format is as follows:
 {
   "value": "2023-10-17"
 }
+
+// or
+
+{
+  "value": "MjAyMy0xMC0xNw==" // bytes
+}
 ```
 
 > *Note*: For the primitive type, although we can directly convert to a string type, to keep the structure schema consistent,
@@ -124,7 +130,14 @@ Here is an example:
 ```
 
 ##### For non-schema:
-The bytes array is converted to a base64-encoded string.
+This behavior is similar to the bytes schema, where the byte array is converted into a base64-encoded string.
+
+For examples:
+```json
+{
+  "value": "MjAyMy0xMC0xNw==" // bytes
+}
+```
 
 #### Customize Pulsar metadata
 
