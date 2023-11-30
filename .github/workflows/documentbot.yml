@@ -46,6 +46,6 @@ jobs:
 
       - uses: streamnative/github-workflow-libraries/doc-label-check@master
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.SNBOT_GITHUB_TOKEN }}
           label-pattern: '- \[(.*?)\] ?`(.+?)`' # matches '- [x] `label`'
 
