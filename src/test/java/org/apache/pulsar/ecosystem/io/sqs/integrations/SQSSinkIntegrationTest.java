@@ -25,7 +25,6 @@ import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
@@ -54,7 +53,7 @@ import org.junit.Test;
 @Slf4j
 @SuppressWarnings("unchecked")
 public class SQSSinkIntegrationTest extends AbstractAwsConnector {
-    
+
     protected static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String PULSAR_TOPIC = "test-sqs-sink-topic";
     private static final String PULSAR_PRODUCER_NAME = "test-sqs-sink-producer";
@@ -65,7 +64,7 @@ public class SQSSinkIntegrationTest extends AbstractAwsConnector {
 
     private String queueUrl;
     private ExampleMessage exampleMessage = ExampleMessage.getMockExampleMessage();;
-    
+
     @Test
     public void testSQSSinkPushMsgToSQSQueue() {
 
