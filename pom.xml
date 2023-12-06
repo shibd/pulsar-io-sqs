@@ -47,10 +47,12 @@
     <testRetryCount>2</testRetryCount>
 
     <!-- connector dependencies -->
-    <jackson.version>2.12.6.1</jackson.version>
+    <jackson.version>2.12.7.1</jackson.version>
     <lombok.version>1.18.22</lombok.version>
     <pulsar.version>3.1.0.1</pulsar.version>
     <aws-java-sdk.version>1.12.228</aws-java-sdk.version>
+    <avro.version>1.11.3</avro.version>
+    <commons-lang3.version>3.13.0</commons-lang3.version>
 
     <!-- test dependencies -->
     <junit.version>4.13.1</junit.version>
@@ -61,11 +63,11 @@
 
     <!-- build plugin dependencies -->
     <license.plugin.version>3.0</license.plugin.version>
-    <maven-checkstyle-plugin.version>3.0.0</maven-checkstyle-plugin.version>
+    <maven-checkstyle-plugin.version>3.3.1</maven-checkstyle-plugin.version>
     <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
     <nifi.nar.plugin.version>1.2.0</nifi.nar.plugin.version>
-    <puppycrawl.checkstyle.version>6.19</puppycrawl.checkstyle.version>
+    <puppycrawl.checkstyle.version>10.12.4</puppycrawl.checkstyle.version>
     <spotbugs-maven-plugin.version>4.2.2</spotbugs-maven-plugin.version>
   </properties>
 
@@ -111,6 +113,16 @@
         <version>${pulsar.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro</artifactId>
+        <version>${avro.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang3.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.amazonaws</groupId>
         <artifactId>aws-java-sdk-bom</artifactId>
         <version>${aws-java-sdk.version}</version>
@@ -145,7 +157,7 @@
       </dependency>
       <dependency>
         <groupId>io.streamnative</groupId>
-        <artifactId>pulsar-client</artifactId>
+        <artifactId>pulsar-client-original</artifactId>
         <version>${pulsar.version}</version>
       </dependency>
       <dependency>
@@ -196,6 +208,16 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-sqs</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
 
     <!-- test dependencies -->
     <dependency>
@@ -225,7 +247,7 @@
     </dependency>
     <dependency>
       <groupId>io.streamnative</groupId>
-      <artifactId>pulsar-client</artifactId>
+      <artifactId>pulsar-client-original</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

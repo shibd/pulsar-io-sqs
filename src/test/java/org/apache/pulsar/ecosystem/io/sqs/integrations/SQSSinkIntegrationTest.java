@@ -20,12 +20,10 @@ package org.apache.pulsar.ecosystem.io.sqs.integrations;
 
 import static org.apache.pulsar.ecosystem.io.sqs.SQSTestUtils.getSinkTestConfig;
 import static org.apache.pulsar.ecosystem.io.sqs.SQSTestUtils.purgeSQSQueue;
-
 import com.amazonaws.services.sqs.buffered.AmazonSQSBufferedAsyncClient;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -33,7 +31,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Producer;

@@ -16,31 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.pulsar.ecosystem.io.sqs;
+package org.apache.pulsar.ecosystem.io.sqs.convert;
 
-import static org.apache.pulsar.ecosystem.io.sqs.SQSTestUtils.getTestConfigHashMap;
-import static org.junit.Assert.assertNull;
-import java.util.Map;
-import org.junit.Test;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.pulsar.client.api.schema.GenericRecord;
+import org.apache.pulsar.functions.api.Record;
 
 /**
- * Unit test {@link SQSSink}.
+ * JSON record convert impl.
  */
-public class SQSSinkTest {
+@Slf4j
+public class JsonRecordConverter extends AbstractRecordConverter {
 
-    /*
-     * Test Case: SQSSink should connect to AWS SQS with correct configs
-     *
-     */
-    @Test
-    public void testSQSSinkConnectToAWSSQS() {
-        Map<String, Object> properties = getTestConfigHashMap();
+    public JsonRecordConverter() {
+        super();
+    }
 
-        SQSSink sink = new SQSSink();
-        try {
-            sink.open(properties, null);
-        } catch (Exception e) {
-            assertNull("Connect to AWS SQS should not get exception", e);
-        }
+    @Override
+    public String convertToJson(Record<GenericRecord> record) throws RecordConvertException {
+        JsonNode nativeObject = (JsonNode) record.getValue().getNativeObject();
+        convertFields(record, (ObjectNode) nativeObject);
+        return nativeObject.toString();
     }
 }

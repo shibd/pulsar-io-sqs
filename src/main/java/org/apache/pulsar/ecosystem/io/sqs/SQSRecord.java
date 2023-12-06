@@ -20,12 +20,10 @@ package org.apache.pulsar.ecosystem.io.sqs;
 
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.MessageSystemAttributeName;
-
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.functions.api.Record;
 import software.amazon.awssdk.utils.StringUtils;

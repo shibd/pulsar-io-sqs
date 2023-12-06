@@ -22,9 +22,7 @@ import static org.apache.pulsar.ecosystem.io.sqs.SQSTestUtils.getTestConfigHashM
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.io.core.SourceContext;
 import org.junit.Test;

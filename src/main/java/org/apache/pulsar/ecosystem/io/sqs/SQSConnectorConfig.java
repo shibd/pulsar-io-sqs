@@ -23,10 +23,15 @@ import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.amazonaws.services.sqs.buffered.AmazonSQSBufferedAsyncClient;
 import com.amazonaws.services.sqs.buffered.QueueBufferConfig;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
-
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pulsar.ecosystem.io.sqs.convert.MetaDataConverter;
 import org.apache.pulsar.io.aws.AwsCredentialProviderPlugin;
 import org.apache.pulsar.io.common.IOConfigUtils;
 import org.apache.pulsar.io.core.SinkContext;
@@ -44,6 +49,7 @@ public class SQSConnectorConfig implements Serializable {
     public static final int DEFAULT_BATCH_SIZE_OF_ONCE_RECEIVE = 1;
     public static final int DEFAULT_NUMBER_OF_SQS_CONSUMERS = 1;
 
+    // General configuration
     @FieldDoc(
             required = false,
             defaultValue = "",
@@ -81,6 +87,17 @@ public class SQSConnectorConfig implements Serializable {
             help = "json-parameters to initialize `AwsCredentialsProviderPlugin`")
     private String awsCredentialPluginParam = "";
 
+    // Sink configuration
+    @FieldDoc(
+            required = false,
+            defaultValue = "pulsar.key",
+            help = "The metadata fields to be sent to the SQS message attributes."
+                    + "Valid values are 'pulsar.topic, pulsar.key, pulsar.partitionIndex, "
+                    + "pulsar.sequence,pulsar.properties.{{Your properties key}}, pulsar.eventTime'"
+    )
+    private String metadataFields;
+
+    // Source configuration
     @FieldDoc(
             required = false,
             defaultValue = "1",
@@ -102,6 +119,27 @@ public class SQSConnectorConfig implements Serializable {
         SQSConnectorConfig config = IOConfigUtils.loadWithSecrets(map, SQSConnectorConfig.class, context);
         config.validateSourceConfig();
         return config;
+    }
+
+    /**
+     * Split meta data field.
+     */
+    public Set<String> getMetaDataFields() {
+        return Optional.ofNullable(metadataFields)
+                .map(__ -> Arrays.stream(metadataFields.split(","))
+                        .map(field -> {
+                            String trimField = field.trim();
+                            if (trimField.contains(" ")) {
+                                throw new IllegalArgumentException(
+                                        "There cannot be spaces in the field: " + metadataFields);
+                            }
+                            if (!MetaDataConverter.isSupportMetaData(trimField)) {
+                                throw new IllegalArgumentException(
+                                        "The field: " + trimField + " is not supported");
+                            }
+                            return trimField;
+                        }).collect(Collectors.toSet())
+                ).orElse(new HashSet<>());
     }
 
     public void validateSourceConfig() throws IllegalArgumentException {

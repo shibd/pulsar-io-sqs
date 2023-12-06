@@ -16,31 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.pulsar.ecosystem.io.sqs;
-
-import static org.apache.pulsar.ecosystem.io.sqs.SQSTestUtils.getTestConfigHashMap;
-import static org.junit.Assert.assertNull;
-import java.util.Map;
-import org.junit.Test;
+package org.apache.pulsar.ecosystem.io.sqs.convert;
 
 /**
- * Unit test {@link SQSSink}.
+ * Exception thrown when record convert failed.
  */
-public class SQSSinkTest {
+public class RecordConvertException extends Exception {
+    public RecordConvertException() {
+        super();
+    }
 
-    /*
-     * Test Case: SQSSink should connect to AWS SQS with correct configs
-     *
-     */
-    @Test
-    public void testSQSSinkConnectToAWSSQS() {
-        Map<String, Object> properties = getTestConfigHashMap();
+    public RecordConvertException(String message) {
+        super(message);
+    }
 
-        SQSSink sink = new SQSSink();
-        try {
-            sink.open(properties, null);
-        } catch (Exception e) {
-            assertNull("Connect to AWS SQS should not get exception", e);
-        }
+    public RecordConvertException(Throwable cause) {
+        super(cause);
+    }
+
+    public RecordConvertException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

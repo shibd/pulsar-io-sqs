@@ -20,7 +20,6 @@ package org.apache.pulsar.ecosystem.io.sqs;
 
 import com.amazonaws.services.sqs.model.MessageSystemAttributeName;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**

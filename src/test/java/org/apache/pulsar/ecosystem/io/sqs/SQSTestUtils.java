@@ -20,7 +20,6 @@ package org.apache.pulsar.ecosystem.io.sqs;
 
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.PurgeQueueRequest;
-
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.pulsar.io.core.SinkContext;

@@ -20,7 +20,6 @@ package org.apache.pulsar.ecosystem.io.sqs.integrations;
 
 import static org.apache.pulsar.ecosystem.io.sqs.SQSTestUtils.getSourceTestConfig;
 import static org.apache.pulsar.ecosystem.io.sqs.SQSTestUtils.purgeSQSQueue;
-
 import com.amazonaws.services.sqs.buffered.AmazonSQSBufferedAsyncClient;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
@@ -28,7 +27,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Consumer;

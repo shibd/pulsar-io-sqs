@@ -193,7 +193,7 @@ public interface RecordConvert {
      * Pulsar record convert JSON Object String.
      * @return The JSON Object String.
      */
-    String convertToJson(Record<GenericObject> record);
+    String convertToJson(Record<GenericRecord> record);
 
 }
 ```
