@@ -24,6 +24,9 @@ import com.amazonaws.services.sqs.buffered.AmazonSQSBufferedAsyncClient;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -39,6 +42,7 @@ import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.ecosystem.io.sqs.SQSConnectorConfig;
 import org.apache.pulsar.ecosystem.io.sqs.SQSSink;
 import org.apache.pulsar.ecosystem.io.sqs.SQSUtils;
+import org.apache.pulsar.ecosystem.io.sqs.convert.pojo.ExampleMessage;
 import org.apache.pulsar.io.aws.AbstractAwsConnector;
 import org.apache.pulsar.io.aws.AwsCredentialProviderPlugin;
 import org.junit.Assert;
@@ -50,7 +54,8 @@ import org.junit.Test;
 @Slf4j
 @SuppressWarnings("unchecked")
 public class SQSSinkIntegrationTest extends AbstractAwsConnector {
-
+    
+    protected static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String PULSAR_TOPIC = "test-sqs-sink-topic";
     private static final String PULSAR_PRODUCER_NAME = "test-sqs-sink-producer";
     private static final String MSG = "hello-message-";
@@ -59,7 +64,8 @@ public class SQSSinkIntegrationTest extends AbstractAwsConnector {
     private AmazonSQSBufferedAsyncClient client;
 
     private String queueUrl;
-
+    private ExampleMessage exampleMessage = ExampleMessage.getMockExampleMessage();;
+    
     @Test
     public void testSQSSinkPushMsgToSQSQueue() {
 
@@ -111,13 +117,14 @@ public class SQSSinkIntegrationTest extends AbstractAwsConnector {
                 .build();
 
         @Cleanup
-        Producer<String> pulsarProducer = pulsarClient.newProducer(Schema.STRING)
+        Producer<ExampleMessage> pulsarProducer = pulsarClient.newProducer(Schema.JSON(ExampleMessage.class))
                 .topic(PULSAR_TOPIC)
                 .producerName(PULSAR_PRODUCER_NAME)
                 .create();
 
+
         for (int i = 0; i < 100; i++) {
-            pulsarProducer.newMessage().value(MSG + i).send();
+            pulsarProducer.send(exampleMessage);
         }
 
         pulsarProducer.close();
@@ -135,7 +142,12 @@ public class SQSSinkIntegrationTest extends AbstractAwsConnector {
 
                 msgs.forEach(msg -> {
                     log.info("Received message: id = {}, body = {}.", msg.getMessageId(), msg.getBody());
-                    Assert.assertTrue(msg.getBody().contains(MSG));
+                    try {
+                        ExampleMessage decodeExampleMessage = MAPPER.readValue(msg.getBody(), ExampleMessage.class);
+                        Assert.assertEquals(exampleMessage, decodeExampleMessage);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
                     final DeleteMessageRequest deleteMessageRequest = new DeleteMessageRequest()
                             .withQueueUrl(queueUrl)
                             .withReceiptHandle(msg.getReceiptHandle());
