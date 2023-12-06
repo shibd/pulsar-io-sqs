@@ -53,7 +53,7 @@ public class MetaDataConverter {
         metaDataConvert.put("pulsar.eventTime",
                 (record, ctx) -> record.getEventTime().map(epochMs -> Instant.ofEpochMilli(epochMs).atZone(
                         ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern(
-                        "yyy-MM-dd'T'HH:mm:ss.SSSXXX"))));
+                        "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"))));
         metaDataConvert.put("pulsar.messageId",
                 (record, ctx) -> record.getMessage().map(msg -> msg.getMessageId().toString()));
     }
